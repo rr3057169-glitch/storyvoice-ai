@@ -7,7 +7,7 @@ import os
 st.set_page_config(page_title="StoryVoice AI - Multi-Character", page_icon="🎙️", layout="centered")
 
 st.title("🎙️ StoryVoice AI Studio")
-st.subheader("Multi-Character & Story Voice Generator")
+st.subheader("Multi-Character Single-Click Generator")
 
 st.markdown("---")
 
@@ -26,38 +26,43 @@ lang_code = lang_codes[selected_lang]
 
 st.markdown("### ✍️ कथा किंवा संवाद टाका (Story / Dialogues)")
 story_input = st.text_area(
-    "येथे तुमचा संवाद किंवा कथा लिहा:",
+    "येथे तुमचा संवाद किंवा कथा लिहा (उदा. [Raja]: राजाचा संवाद):",
     height=220,
     placeholder="उदाहरणार्थ:\n[Narrator]: एका गावात एक राजा राहत होता.\n[Raja]: आज आपण काय करणार?\n[Mantri]: महाराज, प्रजेची भेट घेऊया."
 )
 
 st.markdown("---")
 
-if st.button("🚀 Generate Multi-Character Audio", type="primary"):
+if st.button("🚀 Generate Final Story MP3", type="primary"):
     if not story_input.strip():
         st.warning("⚠️ कृपया आधी कथा किंवा संवाद लिहा!")
     else:
-        with st.spinner("✨ मल्टि-कॅरेक्टर ऑडिओ तयार होत आहे..."):
+        with st.spinner("✨ सर्व पात्रांचे संवाद एकत्र करून MP3 तयार होत आहे..."):
             try:
                 lines = story_input.split("\n")
-                combined_texts = [line.strip() for line in lines if line.strip()]
-                full_text_to_speech = ". ".join(combined_texts)
+                valid_lines = [line.strip() for line in lines if line.strip()]
                 
-                tts = gTTS(text=full_text_to_speech, lang=lang_code, slow=False)
-                
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-                    temp_path = tmp_file.name
-                
-                tts.save(temp_path)
-                
-                with open(temp_path, "rb") as f:
-                    audio_data = f.read()
-                    st.success("🎉 ऑडिओ यशस्वीरित्या तयार झाला!")
-                    st.audio(audio_data, format="audio/mp3")
-                    st.download_button("📥 पूर्ण MP3 Download करा", audio_data, file_name="storyvoice_output.mp3", mime="audio/mp3")
-                
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+                if not valid_lines:
+                    st.warning("⚠️ कृपया योग्य फॉर्मेटमध्ये संवाद लिहा.")
+                else:
+                    # Combine all text smoothly into one for reliable single-file generation without audio merging errors
+                    full_text = ". ".join(valid_lines)
                     
+                    tts = gTTS(text=full_text, lang=lang_code, slow=False)
+                    
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+                        temp_path = tmp_file.name
+                    
+                    tts.save(temp_path)
+                    
+                    with open(temp_path, "rb") as f:
+                        audio_data = f.read()
+                        st.success("🎉 तुमची फायनल स्टोरी ऑडिओ फाईल तयार झाली आहे!")
+                        st.audio(audio_data, format="audio/mp3")
+                        st.download_button("📥 फायनल MP3 Download करा", audio_data, file_name="storyvoice_final.mp3", mime="audio/mp3")
+                    
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                        
             except Exception as e:
                 st.error(f"एरर आली: {str(e)}")
